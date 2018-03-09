@@ -16,6 +16,7 @@ import (
 )
 
 var useStatik bool
+var Commit, Branch, State, TimeStamp string
 
 func init() {
 	flag.BoolVar(&useStatik, "use-statik", false, "serve embedded static resources")
@@ -33,10 +34,23 @@ func sayHello(rw http.ResponseWriter, r *http.Request) {
 	_ = encoder.Encode(greeting{Message: "Hello Gophercon"})
 }
 
+func version(rw http.ResponseWriter, r *http.Request) {
+	version := map[string]string{
+		"commit":    Commit,
+		"branch":    Branch,
+		"state":     State,
+		"timestamp": TimeStamp,
+	}
+	rw.Header().Add("Content-Type", "application/json")
+	encoder := json.NewEncoder(rw)
+	_ = encoder.Encode(version)
+}
+
 func main() {
 	flag.Parse()
 	router := mux.NewRouter()
 	router.HandleFunc("/api/hello", sayHello).Methods("GET")
+	router.HandleFunc("/api/version", version).Methods("GET")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "4545"
